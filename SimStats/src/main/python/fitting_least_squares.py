@@ -16,7 +16,7 @@ class LeastSquares(object):
         self.muy = mean(self.ys)
         
         self.varx = variance(self.xs, self.mux)
-        self.vary = variance(self.xy, self.muy)
+        self.vary = variance(self.ys, self.muy)
         
     def fit_line(self):
         grad = self.gradient()
@@ -25,10 +25,13 @@ class LeastSquares(object):
         return self.xs, ys
     
     def fit_line_pmf(self, name=''):
-        dct = dict(zip(self.fit_line()))
+        xs, ys = self.fit_line()
+        dct = dict(zip(xs,ys))
         return make_pmf_from_dict(dct)
     
     def gradient(self):
+        if self.varx == 0:
+            return covariance(self.xs, self.ys, self.mux, self.muy)
         return covariance(self.xs, self.ys, self.mux, self.muy) / self.varx
     
     def intercept(self):
@@ -38,6 +41,8 @@ class LeastSquares(object):
         return [y - self.intercept() - (self.gradient()*x) for x, y in zip(self.xs, self.ys)]
     
     def coefficient_of_determination(self):
+        if not self.vary:
+            return 1
         res = self.residuals()
         varres = variance(res)
         return 1 - varres / self.vary

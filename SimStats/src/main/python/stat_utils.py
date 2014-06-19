@@ -9,7 +9,11 @@ import math
 
 def mean(obj):
     mu = 0.0
-    if isinstance(obj, Histogram) or isinstance(obj, Pmf):
+    if isinstance(obj, Histogram):
+        for x, count in obj:
+            mu += x * count
+        return mu / obj.get_total_entries()
+    elif isinstance(obj, Pmf):
         for x, p in obj:
             mu += p * x
         return mu
@@ -21,7 +25,7 @@ def mean(obj):
             old_p = p
         return mu
     elif isinstance(obj, list) or hasattr(obj, '__itr__'):
-        return float(sum(obj)) / (len(obj) - 1)
+        return float(sum(obj)) / len(obj)
     else:
         raise TypeError('object must be of dict, list, histogram or Pmf type.')
     
@@ -30,7 +34,11 @@ def variance(obj, mu=None):
         mu = mean(obj)
     
     var = 0.0
-    if isinstance(obj, Histogram) or isinstance(obj, Pmf):
+    if isinstance(obj, Histogram):
+        for x, count in obj:
+            var += count * (x-mu)**2
+        return var / obj.get_total_entries()
+    if isinstance(obj, Pmf):
         for x, p in obj:
             var += p * (x-mu)**2
         return var
@@ -44,7 +52,7 @@ def variance(obj, mu=None):
     elif isinstance(obj, list) or hasattr(obj, '__itr__'):
         for x in obj:
             var += (x-mu)**2
-        return var
+        return var / len(obj)
     else:
         raise TypeError('obj must be of dict, list, histogram, Pmf or Cdf type.')
     
@@ -59,15 +67,9 @@ def zscores(obj, mu=None, sigma=None):
         sigma = standard_dev(obj, mu)
         
     z_scores = []
-    if isinstance(obj, (Histogram,Pmf)):
-        for x, p in obj.sort():
-            z_scores.append(zscore(p, mu, sigma)) 
-    elif isinstance(obj, Cdf):
-        old_p = 0.0
-        for x, p in obj.sort():
-            p -= old_p
-            old_p = p
-            z_scores.append(zscore(p, mu, sigma))
+    if isinstance(obj, (Histogram,Pmf,Cdf)):
+        for x, _ in obj.sort():
+            z_scores.append(zscore(x, mu, sigma)) 
     elif isinstance(obj, list) or hasattr(obj, '__itr__'):
         for x in sorted(obj):
             z_scores.append(zscore(x, mu, sigma))
@@ -77,12 +79,14 @@ def zscores(obj, mu=None, sigma=None):
     return z_scores
 
 def zscore(x, mu, sigma):
+    if sigma == 0:
+        return 0.0
     return (x - mu) / sigma
 
 def zscores_correlation(obj1, obj2):
 
-    zscores_obj1 = zscore(obj1)
-    zscores_obj2 = zscore(obj2)
+    zscores_obj1 = zscores(obj1)
+    zscores_obj2 = zscores(obj2)
     
     return correlation(zscores_obj1, zscores_obj2)
         
@@ -107,6 +111,8 @@ def correlation(xs, ys):
     sigma_x = standard_dev(xs, mux)
     sigma_y = standard_dev(ys, muy)
 
+    if not sigma_x or not sigma_y:
+        return 0.0
     return covariance(xs, ys, mux, muy) / (sigma_x * sigma_y)
 
 def serial_correlation(xs):
@@ -131,8 +137,7 @@ def ranks(lst):
     return rnks
     
 def differences_adj_elements(lst):
-    
-    if not isinstance(lst, list):
+    if not isinstance(lst, (list,tuple)):
         raise TypeError('lst object is not of Type list')
     
     return [lst[i+1]-lst[i] for i in xrange(len(lst)-1)]

@@ -8,6 +8,7 @@ import logging
 import math
 import random
 import copy
+from src.main.python.utils import test_obj_instance, test_obj_subclass
 
 class DictWrapper(object):
 
@@ -15,7 +16,7 @@ class DictWrapper(object):
         if d == None:
             d = {}
             
-        self._testObjectType(d)
+        test_obj_instance(d, (dict))
         self.d = d
         self.name = name
 
@@ -25,6 +26,9 @@ class DictWrapper(object):
             
     def __getitem__(self, key):
         return self.d.get(key)
+    
+    def __setitem__(self, x, y):
+        self.d[x] = y
     
     def __contains__(self, item):
         return self.d.has_key(item)
@@ -39,89 +43,87 @@ class DictWrapper(object):
         return str(self.d)
     
     def __cmp__(self, other):
-        self._testObjectType(other)
-        if self.d < other:
-            return -1
-        elif self.d > other:
-            return 1
-        elif self.d == other:
-            return 0
-        
+        test_obj_subclass(other, (DictWrapper))
+        return cmp(self.d, other.d)    
+    
     def __eq__(self, other):
-        self._testObjectType(other)
-        return (self.d == other)    
+        test_obj_subclass(other, (DictWrapper))
+        return (self.d == other.d)
     
     def __ne__(self, other):
-        self._testObjectType(other)
-        return (self.d != other)
+        test_obj_subclass(other, (DictWrapper))
+        return (self.d != other.d)
     
     def __lt__(self, other):
-        self._testObjectType(other)
-        return (self.d < other)
+        test_obj_subclass(other, (DictWrapper))
+        return (self.d < other.d)
 
     def __gt__(self, other):
-        self._testObjectType(other)
-        return (self.d > other)
+        test_obj_subclass(other, (DictWrapper))
+        return (self.d > other.d)
     
     def __le__(self, other):
-        self._testObjectType(other)
-        return (self.d <= other)
+        test_obj_subclass(other, (DictWrapper))
+        return (self.d <= other.d)
     
     def __ge__(self, other):
-        self._testObjectType(other)
-        return (self.d >= other)
+        test_obj_subclass(other, (DictWrapper))
+        return (self.d >= other.d)
     
     def __pos__(self):
-        return DictWrapper(self.d, self.name)
+        return DictWrapper(copy.deepcopy(self.d), self.name)
     
     def __neg__(self):
         d = {}
         for key, value in self.d.iteritems():
             d[key] = -value
-        return DictWrapper(d, self.name)
-    
-    def __round__(self, n):
-        d = {}
-        for key, value in self.d.iteritems():
-            d[key] = round(value, n)
-        return DictWrapper(d, self.name)
+        return DictWrapper(copy.deepcopy(d), self.name)
 
     def __add__(self, other):
+        test_obj_subclass(other, (DictWrapper))
         d = copy.deepcopy(self.d)
-        for key, value in self.other.iteritems():
+        for key, value in other:
             d[key] += value
         return DictWrapper(d, self.name)
         
     def __sub__(self, other):
+        test_obj_subclass(other, (DictWrapper))
         d = copy.deepcopy(self.d)
-        for key, value in self.other.iteritems():
+        for key, value in other:
             d[key] -= value
         return DictWrapper(d, self.name)
     
     def __mul__(self, other):
+        test_obj_subclass(other, (DictWrapper))
         d = copy.deepcopy(self.d)
-        for key, value in self.other.iteritems():
+        for key, value in other:
             d[key] *= value
         return DictWrapper(d, self.name)
     
     def __div__(self, other):
+        test_obj_subclass(other, (DictWrapper))
         d = copy.deepcopy(self.d)
-        for key, value in self.other.iteritems():
+        for key, value in other:
             if value == 0.0:
-                d[key] = 0
+                d[key] = 0.0
             else:
                 d[key] /= value
         return DictWrapper(d, self.name)
     
     def __mod__(self, other):
+        test_obj_subclass(other, (DictWrapper))
         d = copy.deepcopy(self.d)
-        for key, value in self.other.iteritems():
-            d[key] %= value
+        for key, value in other:
+            if value == 0.0:
+                d[key] = 0.0
+            else:
+                d[key] %= value
         return DictWrapper(d, self.name)
 
     def __pow__(self, other):
+        test_obj_subclass(other, (DictWrapper))
         d = copy.deepcopy(self.d)
-        for key, value in self.other.iteritems():
+        for key, value in other:
             d[key] = d[key]**value
         return DictWrapper(d, self.name)
     
@@ -131,16 +133,15 @@ class DictWrapper(object):
     def __deepcopy__(self, memo):
         return DictWrapper(copy.deepcopy(self.d), copy.deepcopy(self.name))
     
-    def _testObjectType(self, obj):
-        if not isinstance(obj, dict) and not issubclass(obj, dict):
-            raise TypeError('object must be of type dict or subclass of dict')
-        
     def items(self):
         return self.d.items()
 
     def sort(self):
-        return zip(*sorted(self.items()))
+        return sorted(self.items())
 
+    def sort_zip(self):
+        return zip(*sorted(self.items()))
+    
     def set(self, x, y=0):
         self.d[x] = y
         
@@ -149,12 +150,31 @@ class DictWrapper(object):
 
     def increment(self, x, term=1):
         self.d[x] = self.d.get(x, 0) + term
+        return self.d[x]
 
     def multiply(self, x, factor):
         self.d[x] = self.d.get(x, 0) * factor
+        return self.d[x]
+    
+    def divide(self, x, factor):
+        self.d[x] = self.d.get(x, 0) / factor
+        return self.d[x]
+    
+    def mod(self, x, factor):
+        self.d[x] = self.d.get(x, 0) % factor
+        return self.d[x]
     
     def is_subset(self, other):
-        for val, freq in self.Items():
+        test_obj_subclass(other, (DictWrapper))
+        if len(other) < len(self):
+            return False
+        
+        if (not min(other.get_keys()) <= min(self.get_keys())) and (not max(self.get_keys()) <= max(min(other.get_keys()))): 
+            return False
+        
+        for val, freq in self.d.iteritems():
+            if other[val] == None:
+                continue
             if freq > other[val]:
                 return False
         return True
@@ -162,8 +182,11 @@ class DictWrapper(object):
     def get_dict(self):
         return self.d
 
-    def get_values(self):
+    def get_keys(self):
         return self.d.keys()
+    
+    def get_values(self):
+        return self.d.values()
         
     def get_total_entries(self):
         return sum(self.d.itervalues())
@@ -179,17 +202,31 @@ class Histogram(DictWrapper):
     def __init__(self, d=None, name=''):
         super(Histogram, self).__init__(d, name)
 
+    def __copy__(self):
+        return Histogram(copy.copy(self.d), copy.copy(self.name))
+    
+    def __deepcopy__(self, memo):
+        return Histogram(copy.deepcopy(self.d), copy.deepcopy(self.name))
+
     def get_frequency(self, value, default=0):
         return self.get(value, default)
     
     def get_frequencies(self):
-        return self.get_values()
+        return self.get_keys()
 
 
 class Pmf(DictWrapper):
     
     def __init__(self, d=None, name=''):
         super(Pmf, self).__init__(d, name)
+        if d!=None:
+            self.normalise()
+
+    def __copy__(self):
+        return Pmf(copy.copy(self.d), copy.copy(self.name))
+    
+    def __deepcopy__(self, memo):
+        return Pmf(copy.deepcopy(self.d), copy.deepcopy(self.name))
 
     def get_prob(self, x, default=0):
         return self.get(x, default)
@@ -198,7 +235,7 @@ class Pmf(DictWrapper):
         return self.get_values()
 
     def normalise(self, fraction=1.0):
-        total = self.total()
+        total = self.get_total_entries()
         if total == 0.0:
             logging.warning('Normalize: total probability is zero.')
             raise ValueError('total probability is zero.')
@@ -213,21 +250,27 @@ class Pmf(DictWrapper):
             
         target = random.random()
         total = 0.0
-        for x, p in self.d.iteritems():
+        for x, p in self:
             total += p
             if total >= target:
                 return x
     
     def get_pmf_of_logs(self):
         m = self.max_likelihood()[1]
-        for x, p in self.d.iteritems():
-            self.Set(x, math.log(p/m))
+        pmf = copy.deepcopy(self)
+        for x, p in pmf:
+            pmf.set(x, math.log(p/m))
+            
+        return pmf
 
     
     def get_pmf_of_exp(self):
         m = self.max_likelihood()[1]
-        for x, p in self.d.iteritems():
-            self.Set(x, math.exp(p-m))
+        pmf = copy.deepcopy(self)
+        for x, p in pmf:
+            self.set(x, math.exp(p-m))
+        
+        return pmf
 
     def max_likelihood(self):
         max_value = 0.0
@@ -252,7 +295,18 @@ class Pmf(DictWrapper):
          
 class Cdf(DictWrapper):
     
-    def __init__(self, d={}, name=''):
+    def __init__(self, items, name=''):
+        runsum = 0
+        d = {}
+        items = sorted(items)
+        for value, count in items:
+            runsum += count
+            d[value] = runsum
+
+        total = float(runsum)
+        for value, count in items:
+            d[value] = d[value]/total
+        
         super(Cdf, self).__init__(d, name) 
         
     def get_prob(self, x):
@@ -285,79 +339,58 @@ class Cdf(DictWrapper):
         return values_probs[last_value_prob_indx][0]
     
     def quantile(self, quant):
-        
+        if quant > 1.0 and quant < 0.0:
+            raise Exception('quant is out of bounds. Argument should be between 0.0 and 1.0. argument currently equals %s' % quant)
         return self.get_value(quant)
     
     def percentile(self, p):
-        
+        if p > 100.0 and p < 0.0:
+            raise Exception('p is out of bounds. Argument should be between 0.0 and 100.0. argument currently equals %s' % p)
         return self.get_value(p/100.0)
     
     def random(self):
-        
         return self.get_value(random.random())
 
     def sample(self, n, name=''):
- 
-        d = {}       
-        for _ in range(n):
-            value = self.random()
-            d[value] = self.get_prob(value)
-            
-        return Cdf(d, name)
-        
-def make_hist_from_list(lst, name=''):
-    if not isinstance(lst, list):
-        raise TypeError('lst object must be of type list')
+        return [self.random() for _ in range(n)]
     
+def make_hist_from_list(lst, name=''):
+    test_obj_instance(lst, list)
     hist = Histogram(name=name)
     [hist.increment(x) for x in lst]
     return hist
 
-
 def make_hist_from_dict(dct, name=''):
-    if not isinstance(dct, dict):
-        raise TypeError('dct object must be of type dict')
-    
+    test_obj_instance(dct, dict)
     return Histogram(dct, name)
 
-
 def make_pmf_from_list(lst, name=''):
-    if not isinstance(lst, list):
-        raise TypeError('lst object must be of type list')
-    
+    test_obj_instance(lst, list)
     hist = make_hist_from_list(lst, name)
     return make_pmf_from_hist(hist)
 
-
 def make_pmf_from_dict(dct, name=''):
-    if not isinstance(dct, dict):
-        raise TypeError('dct object must be of type dict')
-    
+    test_obj_instance(dct, dict)
     pmf = Pmf(dct, name)
     pmf.normalise()
     return pmf
-
 
 def make_pmf_from_hist(hist, name=None):
     if name is None:
         name = hist.name
 
-    if not isinstance(hist, Histogram):
-        raise TypeError('hist object must be of type Histogram')
+    test_obj_instance(hist, Histogram)
     # make a copy of the dictionary
     d = dict(hist.get_dict())
     pmf = Pmf(d, name)
     pmf.normalise()
     return pmf
 
-
 def make_pmf_from_cdf(cdf, name=None):
     if name is None:
         name = cdf.name
 
-    if not isinstance(cdf, Cdf):
-        raise TypeError('cdf object must be of type Cdf')
-        
+    test_obj_instance(cdf, Cdf)
     pmf = Pmf(name=name)
 
     prev = 0.0
@@ -365,64 +398,47 @@ def make_pmf_from_cdf(cdf, name=None):
         pmf.increment(val, prob-prev)
         prev = prob
 
+    pmf.normalise()
     return pmf
 
-
 def make_mixture_pmfs(pmfs, name='mix'):
-    if not isinstance(pmfs, dict):
-        raise TypeError('pmfs object must be of type dict')
-    
+    test_obj_instance(pmfs, dict)
+
     mix = Pmf(name=name)
-    for pmf, prob in pmfs:
-        if not isinstance(pmf, (Pmf,Histogram)):
-            raise TypeError('pmf object must be of type Pmf or Histogram')
+    for pmf, prob in pmfs.iteritems():
         for x, p in pmf:
             mix.increment(x, p * prob)
+    pmf.normalise()
     return mix
 
 def make_cdf_from_items(items, name):
-    runsum = 0
-    d = {}
-    items = sorted(items)
-    for value, count in items:
-        runsum += count
-        d[value] = runsum
-
-    total = float(runsum)
-    for value, count in items:
-        d[value] = d[value]/total
-
-    cdf = Cdf(d, name)
+    cdf = Cdf(items, name)
     return cdf
 
 def make_cdf_from_dict(dct, name=''):
-    if not isinstance(dct, dict):
-        raise TypeError('dct object must be of type dict')
-    
-    return make_cdf_from_items(dct.iteritems(), name)
+    test_obj_instance(dct, dict)
+    return make_cdf_from_items(dct.items(), name)
 
 def make_cdf_from_hist(hist, name=None):
     if name == None:
         name = hist.name
     
-    return make_cdf_from_items(hist.items(), name)
+    return make_cdf_from_items(hist, name)
 
 def make_cdf_from_pmf(pmf, name=None):
     if name == None:
         name = pmf.name
         
-    return make_cdf_from_items(pmf.items(), name)
+    return make_cdf_from_items(pmf, name)
 
 def make_cdf_from_list(seq, name=''):
     hist = make_hist_from_list(seq)
     return make_cdf_from_hist(hist, name)
 
-def make_transform(distro, transform_type, complement=False):
+def make_transform(distro, transform_type='', complement=False):
+    test_obj_instance(distro, DictWrapper)
     
-    if not issubclass(distro, DictWrapper):
-        raise TypeError('distro is not of subclass DictWrapper')
-    
-    xs, ps = distro.sort()
+    xs, ps = distro.sort_zip()
     scale = dict(xscale='linear', yscale='linear')
 
     if transform_type == 'exponential':

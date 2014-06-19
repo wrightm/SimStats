@@ -6,8 +6,9 @@
 from matplotlib import pyplot
 from src.main.python.discrete_distributions import DictWrapper
 from src.main.python.stat_utils import differences_adj_elements
+from src.main.python.utils import test_obj_subclass, test_obj_instance
 
-def add_options_to_plot(d, **options):
+def add_options_to_plot(d=None, **options):
     if d is None:
         d = {}
 
@@ -30,27 +31,24 @@ def hexbin_plot(xs, ys, **options) :
         
 def plot_discrete_distribution(distro, **options):
 
-    if not issubclass(distro, DictWrapper):
-        raise TypeError('distro object should be of subclass type DictWrapper')
+    test_obj_subclass(distro, DictWrapper)
     
-    xs, ps = distro.sort()
+    xs, ps = distro.sort_zip()
     options = add_options_to_plot(options, label=distro.name)
     plot(xs, ps, **options)
     
 def plot_discrete_distributions(distros, **options):
-    
-    if not isinstance(distros, list):
-        raise TypeError('distros object should be of object type list')
+
+    test_obj_instance(distros, list)
     
     for distro in distros:
         plot_discrete_distribution(distro, **options)
         
 def plot_histogram(distro, **options):
     
-    if not issubclass(distro, DictWrapper):
-        raise TypeError('distro object should be of subclass type DictWrapper')
+    test_obj_subclass(distro, DictWrapper)
 
-    xs, fs = distro.sort()
+    xs, fs = distro.sort_zip()
     width = min(differences_adj_elements(xs))
 
     options = add_options_to_plot(options, 
@@ -63,8 +61,7 @@ def plot_histogram(distro, **options):
     
 def plot_histograms(distros, **options):
     
-    if not isinstance(distros, list):
-        raise TypeError('distros object should be of object type list')
+    test_obj_instance(distros, list)
     
     for distro in distros:
         plot_histogram(distro, **options)
