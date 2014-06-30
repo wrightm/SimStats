@@ -71,8 +71,7 @@ def do_file_exist(filename):
     return zipio.isfile(filename)
 
 if __name__ == "__main__":
-    pass
     #import sys;sys.argv = ['', 'Test.testName']
-    #suite = unittest.TestSuite()
-    #suite.addTests([PlottingTest])
-    #unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestSuite()
+    suite.addTests([PlottingTest])
+    unittest.TextTestRunner(verbosity=2).run(suite)

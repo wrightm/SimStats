@@ -9,6 +9,8 @@ import math
 import random
 import copy
 from src.main.python.utils import test_obj_instance, test_obj_subclass
+import numpy
+from scipy.special import erf
 
 class DictWrapper(object):
 
@@ -324,7 +326,27 @@ class Cdf(DictWrapper):
         last_value_prob_indx = len(values_probs) - 1
         
         return values_probs[last_value_prob_indx][1]
+    
+    def get_absolute_prob(self, x):
         
+        values_probs = self.sort()
+        values = []
+        for value, _ in values_probs:
+            if value > x:
+                break
+            values.append(value)
+        
+        nvalues = len(values)
+        if nvalues == 0:
+            return values_probs[0][1]
+        if nvalues == 1:
+            return self.get_prob(values[nvalues-1])
+        
+        leading_prob = self.get_prob(values[nvalues-1])
+        sub_leading_prob = self.get_prob(values[nvalues-2])
+
+        return leading_prob-sub_leading_prob
+    
     def get_value(self, p):
         
         values_probs = self.sort()
@@ -435,6 +457,17 @@ def make_cdf_from_list(seq, name=''):
     hist = make_hist_from_list(seq)
     return make_cdf_from_hist(hist, name)
 
+def make_normal_cdf(low, high, digits, name=''):
+    xs = numpy.linspace(low, high, digits)
+    ps = (erf(xs / math.sqrt(2.0)) + 1) / 2.0
+    cdf = Cdf(zip(xs, ps), name)
+    return cdf
+
+def make_normal_pmf(low, high, digits, name=''):
+    cdf = make_normal_cdf(low, high, digits, name)
+    pmf = make_pmf_from_cdf(cdf, name)
+    return pmf
+
 def make_transform(distro, transform_type='', complement=False):
     test_obj_instance(distro, DictWrapper)
     
@@ -468,7 +501,4 @@ def make_transform(distro, transform_type='', complement=False):
     
     return distro.__class__(dict(zip(xs,ps)), distro.name), scale
         
-        
-    
-    
     

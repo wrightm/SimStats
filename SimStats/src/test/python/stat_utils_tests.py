@@ -8,7 +8,9 @@ from src.main.python.discrete_distributions import make_hist_from_list,\
     make_pmf_from_list, make_cdf_from_list
 from src.main.python.stat_utils import mean, variance, standard_dev, zscores,\
     zscore, zscores_correlation, covariance, correlation, serial_correlation,\
-    ranks, spearman_correlation, differences_adj_elements
+    ranks, spearman_correlation, differences_adj_elements, median, chi_squared,\
+    sample_with_replacement, sample_without_replacement, partition_sample,\
+    difference_in_mean, relative_mean_difference
 
 
 class StatUtilTest(unittest.TestCase):
@@ -142,6 +144,56 @@ class StatUtilTest(unittest.TestCase):
         lst = [4,4,4,4,4]
         self.assertEqual(differences_adj_elements(lst), [0,0,0,0])
 
+    def test_median_histogram(self):
+        
+        lst = [4,4,4,4,4]
+        hist = make_hist_from_list(lst)
+        self.assertEqual(median(hist), 4)
+    
+    def test_median_pmf(self):
+        
+        lst = [4,4,4,4,4]
+        pmf = make_pmf_from_list(lst)
+        self.assertEqual(median(pmf), 4)
+    
+    def test_median_cdf(self):
+
+        lst = [4,4,4,4,4]
+        cdf = make_cdf_from_list(lst)
+        self.assertEqual(median(cdf), 4)      
+        
+    def test_median_lst(self):
+        
+        lst = [4,4,4,4,4]
+        self.assertEqual(median(lst), 4)
+    
+    def test_median_raise(self):
+        self.assertRaises(TypeError, median, 4)
+        
+    def test_chi_squared(self):
+        self.assertEqual(chi_squared([[1,1,1,1]],[[1,1,1,1]]), 0)
+        
+    def test_sample_with_replacement(self):
+        lst = [1,1,1,1,1,1,1,1,1,1]
+        self.assertEqual(sample_with_replacement(lst, 3),[1,1,1])
+        
+    def test_sample_without_replacement(self):
+        lst = [1,1,1,1,1,1,1,1,1,1]
+        self.assertEqual(sample_without_replacement(lst, 3),[1,1,1])
+        
+    def test_partition_sample(self):
+        lst = [1,1,1,1,1,1,1,1,1,1]
+        self.assertEqual(partition_sample(lst, len(lst)/2), ([1,1,1,1,1], [1,1,1,1,1]))
+        
+    def test_difference_in_mean(self):
+        lst = [1,1,1]
+        self.assertEqual(difference_in_mean(lst,lst), (1,1,0))
+        
+    def test_relative_mean_difference(self):
+        lst = [1,1,1,1,1,1,1,1,1,1]
+        pmf = make_pmf_from_list(lst)
+        self.assertEqual(relative_mean_difference(pmf), 0.0)
+        
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     suite = unittest.TestSuite()

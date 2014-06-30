@@ -3,9 +3,13 @@
 @copyright: 2014 Michael Wright
 @license: GNU GPLv3 http://www.gnu.org/licenses/gpl.html
 '''
-from src.main.python.discrete_distributions import Histogram, Pmf, Cdf
+from src.main.python.discrete_distributions import Histogram, Pmf, Cdf,\
+    make_cdf_from_hist, make_cdf_from_pmf, make_cdf_from_list
 
 import math
+import itertools
+import random
+from src.main.python.utils import test_obj_instance
 
 def mean(obj):
     mu = 0.0
@@ -28,7 +32,22 @@ def mean(obj):
         return float(sum(obj)) / len(obj)
     else:
         raise TypeError('object must be of dict, list, histogram or Pmf type.')
-    
+
+def median(obj):
+    if isinstance(obj, Histogram):
+        cdf = make_cdf_from_hist(obj)
+        return cdf.get_value(0.5)
+    elif isinstance(obj, Pmf):
+        cdf = make_cdf_from_pmf(obj)
+        return cdf.get_value(0.5)
+    elif isinstance(obj, Cdf):
+        return obj.get_value(0.5)
+    elif isinstance(obj, list) or hasattr(obj, '__itr__'):
+        cdf = make_cdf_from_list(obj)
+        return cdf.get_value(0.5)
+    else:
+        raise TypeError('object must be of dict, list, histogram or Pmf type.')
+      
 def variance(obj, mu=None):
     if mu is None:
         mu = mean(obj)
@@ -142,3 +161,42 @@ def differences_adj_elements(lst):
     
     return [lst[i+1]-lst[i] for i in xrange(len(lst)-1)]
 
+def chi_squared(expected, observed):
+    it = zip(itertools.chain(*expected), 
+             itertools.chain(*observed))
+    t = [(obs - exp)**2 / exp for exp, obs in it]
+    return sum(t)
+
+def sample_with_replacement(sample, sample_size):
+    return [random.choice(sample) for _ in xrange(sample_size)]
+
+def sample_without_replacement(sample, sample_size):
+    return random.sample(sample, sample_size)
+
+def partition_sample(sample, sample_split):
+    random.shuffle(sample)
+    return sample[:sample_split], sample[sample_split:]
+
+def difference_in_mean(sample1, sample2):
+    mu1 = mean(sample1)
+    mu2 = mean(sample2)
+    delta = mu1 - mu2
+
+    return mu1, mu2, delta
+
+def relative_mean_difference(pmf, mu=None):
+    test_obj_instance(pmf, Pmf)
+    if mu is None:
+        mu = mean(pmf)
+
+    diff = Pmf()
+    for v1, p1 in pmf.items():
+        for v2, p2 in pmf.items():
+            diff.increment(abs(v1-v2), p1*p2)
+
+    return mean(diff) / mu
+
+
+
+
+    

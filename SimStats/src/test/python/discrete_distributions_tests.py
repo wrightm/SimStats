@@ -9,7 +9,7 @@ from src.main.python.discrete_distributions import DictWrapper, Histogram, Pmf,\
     Cdf, make_hist_from_list, make_hist_from_dict, make_pmf_from_list,\
     make_pmf_from_dict, make_pmf_from_hist, make_pmf_from_cdf, make_mixture_pmfs,\
     make_cdf_from_dict, make_cdf_from_hist, make_cdf_from_pmf,\
-    make_cdf_from_list, make_transform
+    make_cdf_from_list, make_transform, make_normal_cdf, make_normal_pmf
 import copy
 
 
@@ -272,6 +272,12 @@ class CdfTest(unittest.TestCase):
     def test_get_prob_without_key(self):
         self.assertEqual(self.cdf.get_prob(3.5), 0.6)
 
+    def test_get_absolute_prob_with_key(self):
+        self.assertEqual(self.cdf.get_absolute_prob(3), 0.3)
+    
+    def test_get_absolute_prob_without_key(self):
+        self.assertEqual(self.cdf.get_absolute_prob(3.5), 0.3)
+         
     def test_get_value_with_prob(self):
         self.assertEqual(self.cdf.get_value(0.6), 3)
         
@@ -345,6 +351,12 @@ class MakeMethodTest(unittest.TestCase):
     def test_make_cdf_from_list(self):
         lst = [1,1,2,2,3,3,3,4,5,5,5]
         self.assertEqual(len(make_cdf_from_list(lst)), 5)
+        
+    def test_make_normal_cdf(self):
+        self.assertEqual(len(make_normal_cdf(1,5,5)), 5)
+    
+    def test_make_normal_pmf(self):
+        self.assertEqual(len(make_normal_pmf(1,5,5)), 5)
         
     def test_make_transform(self):
         dct = {1:2,2:2,3:3,4:1,5:4}
